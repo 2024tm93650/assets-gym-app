@@ -1,0 +1,42 @@
+name: CI Pipeline - ACEest Fitness & Gym
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python 3.10
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Step 4: Lint - syntax check with py_compile
+      - name: Syntax check with py_compile
+        run: python -m py_compile app.py
+
+      # Step 5: Lint - code quality check with flake8
+      - name: Lint with flake8
+        run: flake8 app.py tests/ --max-line-length=120 --statistics
+
+      # Step 6: Build Docker image
+      - name: Build Docker image
+        run: docker build -t aceest-gym-app .
+
+      # Step 7: Run pytest inside Docker container
+      - name: Run tests in Docker container
+        run: docker run --rm aceest-gym-app python -m pytest tests/ -v
